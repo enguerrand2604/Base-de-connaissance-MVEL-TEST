@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base de connaissance support — Ma vie en LIVRE</title>
+<style>
+  :root{
+    --navy:#0D2C96; --navy-soft:#3A54B0; --navy-ink:#0a2170;
+    --yellow:#F5D838; --yellow-pale:#FFF4B6; --cream:#FAF7EF;
+    --ink:#1C1C28; --grey:#6B6B76; --line:#E4E6F0; --white:#fff;
+    --ext:#0D2C96; --int:#B4690E;
+    --ok:#1E7A46; --warn:#B4690E; --hot:#A6271A;
+    --shadow:0 1px 2px rgba(13,44,150,.06),0 8px 24px rgba(13,44,150,.06);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--cream);color:var(--ink);line-height:1.5;
+  }
+  ::selection{background:var(--yellow-pale)}
+
+  /* Header */
+  header{
+    background:var(--navy);color:#fff;padding:18px 28px;
+    display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:20;
+  }
+  .logo{display:flex;flex-direction:column;line-height:1.05}
+  .logo b{font-size:15px;letter-spacing:.14em;font-weight:700}
+  .logo span{font-size:11px;color:var(--yellow-pale);letter-spacing:.18em}
+  .tabs{display:flex;gap:4px;margin-left:24px}
+  .tab{
+    background:transparent;border:0;color:#c9d3f5;font:inherit;font-size:14px;
+    padding:8px 14px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s;
+  }
+  .tab:hover{color:#fff;background:rgba(255,255,255,.08)}
+  .tab.active{color:var(--navy);background:var(--yellow-pale);font-weight:600}
+  .header-meta{margin-left:auto;font-size:12px;color:#9bb0e8;text-align:right}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:28px}
+
+  /* Search zone */
+  .searchbar{
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 18px;
+    display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);
+  }
+  .searchbar svg{flex:none;color:var(--navy-soft)}
+  .searchbar input{
+    flex:1;border:0;outline:0;font:inherit;font-size:17px;background:transparent;padding:12px 0;color:var(--ink);
+  }
+  .searchbar input::placeholder{color:#9aa0 b0;color:#a3a7b5}
+  .search-clear{
+    border:0;background:var(--cream);color:var(--grey);width:30px;height:30px;border-radius:8px;
+    cursor:pointer;font-size:16px;display:none;align-items:center;justify-content:center;
+  }
+  .search-clear.show{display:flex}
+
+  /* Filters */
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
+  .chip{
+    border:1px solid var(--line);background:#fff;color:var(--grey);font:inherit;font-size:13px;
+    padding:7px 13px;border-radius:999px;cursor:pointer;transition:all .13s;display:inline-flex;align-items:center;gap:7px;
+  }
+  .chip:hover{border-color:var(--navy-soft);color:var(--navy)}
+  .chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+  .chip .dot{width:8px;height:8px;border-radius:50%}
+  .chip.on .dot{outline:2px solid rgba(255,255,255,.35)}
+  .count{margin:18px 2px 10px;font-size:13px;color:var(--grey)}
+  .count b{color:var(--ink)}
+
+  /* Layout split */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+  @media(max-width:880px){.split{grid-template-columns:1fr}}
+
+  /* Result list */
+  .list{display:flex;flex-direction:column;gap:10px}
+  .card{
+    background:#fff;border:1px solid var(--line);border-left:4px solid var(--navy);
+    border-radius:12px;padding:15px 16px;cursor:pointer;transition:box-shadow .15s,border-color .15s,transform .05s;
+  }
+  .card:hover{box-shadow:var(--shadow)}
+  .card:active{transform:translateY(1px)}
+  .card.sel{border-color:var(--navy);box-shadow:var(--shadow);background:#fff}
+  .card.int{border-left-color:var(--int)}
+  .card-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+  .tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+  .tag.ext{background:#e7ecfb;color:var(--navy)}
+  .tag.int{background:#fbeed9;color:var(--int)}
+  .tag.theme{background:var(--cream);color:var(--grey);font-weight:500}
+  .crit{margin-left:auto;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;color:var(--grey)}
+  .crit .cdot{width:8px;height:8px;border-radius:50%}
+  .c-Haute{background:var(--hot)} .c-Moyenne{background:var(--warn)} .c-Basse{background:var(--ok)}
+  .card h3{margin:0;font-size:15px;font-weight:600;line-height:1.35}
+  .card p{margin:6px 0 0;font-size:13px;color:var(--grey);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .kw{margin-top:9px;font-size:11px;color:#9aa0b0}
+  mark{background:var(--yellow-pale);color:inherit;padding:0 1px;border-radius:2px}
+
+  .empty{
+    text-align:center;color:var(--grey);padding:48px 20px;border:1px dashed var(--line);
+    border-radius:12px;background:#fff;
+  }
+  .empty svg{color:#c7ccdb;margin-bottom:8px}
+
+  /* Detail panel */
+  .detail{position:sticky;top:96px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .panel-empty{padding:52px 28px;text-align:center;color:var(--grey)}
+  .panel-empty svg{color:#c7ccdb;margin-bottom:10px}
+  .panel-head{padding:20px 22px 16px;border-bottom:1px solid var(--line)}
+  .panel-head .tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}
+  .panel-head h2{margin:0;font-size:19px;line-height:1.3}
+  .panel-head .sub{margin:5px 0 0;font-size:13px;color:var(--grey)}
+  .panel-body{padding:18px 22px 22px}
+  .field-label{font-size:12px;font-weight:600;color:var(--navy-soft);margin:0 0 6px;letter-spacing:.02em}
+  .answer{
+    background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:15px 16px;
+    font-size:14px;white-space:pre-wrap;line-height:1.6;color:var(--ink);max-height:260px;overflow:auto;
+  }
+  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .btn{
+    font:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:11px 18px;cursor:pointer;border:1px solid transparent;
+    display:inline-flex;align-items:center;gap:8px;transition:background .15s,border-color .15s,transform .05s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--navy);color:#fff}
+  .btn-primary:hover{background:var(--navy-ink)}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--navy-soft);color:var(--navy)}
+  .btn.copied{background:var(--ok);border-color:var(--ok);color:#fff}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  .meta{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .meta .k{font-size:11px;color:var(--grey);margin-bottom:3px}
+  .meta .v{font-size:13px;font-weight:600}
+  .cto-yes{color:var(--hot)} .cto-no{color:var(--ok)}
+  .users{margin-top:14px;font-size:12px;color:var(--grey)}
+  .users b{color:var(--ink);font-weight:600}
+
+  /* Assistant tab */
+  .assist-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px;max-width:760px;margin:0 auto}
+  .assist-card h2{margin:0 0 4px;font-size:18px}
+  .assist-card .hint{margin:0 0 16px;font-size:13px;color:var(--grey)}
+  textarea{
+    width:100%;border:1px solid var(--line);border-radius:12px;padding:14px;font:inherit;font-size:14px;
+    resize:vertical;min-height:150px;outline:0;color:var(--ink);
+  }
+  textarea:focus{border-color:var(--navy-soft)}
+  .assist-out{margin-top:18px;display:none}
+  .assist-out.show{display:block;animation:fade .3s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .score{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .score-ring{--v:0;width:56px;height:56px;border-radius:50%;flex:none;
+    background:conic-gradient(var(--ok) calc(var(--v)*1%),var(--line) 0);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--navy)}
+  .score-ring i{width:42px;height:42px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal}
+  .score .lbl{font-size:13px;color:var(--grey)}
+  .score .lbl b{display:block;font-size:15px;color:var(--ink)}
+  .src{margin-top:12px;font-size:12px;color:var(--grey)}
+  .src span{display:inline-block;background:var(--cream);border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin:3px 4px 0 0}
+  .disclaimer{margin-top:16px;font-size:11px;color:#9aa0b0;text-align:center}
+  .foot{max-width:1200px;margin:20px auto 40px;padding:0 28px;font-size:11px;color:#9aa0b0;text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><b>MA VIE EN LIVRE</b><span>BASE DE CONNAISSANCE SUPPORT</span></div>
+  <div class="header-meta">Prototype démonstratif<br>données réelles (échantillon)</div>
+</header>
+
+<!-- BROWSE -->
+<div class="wrap browse" id="browse">
+  <div class="searchbar">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="q" type="text" placeholder="Rechercher un problème, un mot-clé (ex. paiement, photo, mot de passe…)" autocomplete="off">
+    <button class="search-clear" id="clear" aria-label="Effacer">✕</button>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="chip on" data-f="all">Tout</button>
+    <button class="chip" data-f="ext"><span class="dot" style="background:var(--ext)"></span>Support client</button>
+    <button class="chip" data-f="int"><span class="dot" style="background:var(--int)"></span>Interne / opérationnel</button>
+    <button class="chip" data-f="Haute"><span class="dot c-Haute"></span>Criticité haute</button>
+  </div>
+
+  <div class="count" id="count"></div>
+
+  <div class="split">
+    <div class="list" id="list"></div>
+    <div class="detail">
+      <div class="panel" id="panel">
+        <div class="panel-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v14H5.2L4 19.5z"/><path d="M8 9h8M8 13h5"/></svg>
+          <p>Sélectionnez une fiche pour voir la réponse type<br>et la copier en un clic.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">Prototype — Ma vie en LIVRE · Base de connaissance support · Données d'échantillon issues des tickets réels</div>
+
+<script>
+// ---- DONNÉES RÉELLES (échantillon issu des fiches SUP) ----
+const DATA = [
+ {id:"SUP-01",cat:"ext",theme:"Format questions",sub:"Free talk",
+  prob:"Le questionnaire ne convient pas : l'utilisateur veut raconter à sa façon, hors du cadre des questions.",
+  kw:"questions, free talk, sans questions, raconter, libre, pas à l'aise, cadre",
+  crit:"Haute",cto:"Non",statut:"À jour",users:"Tramini, Bronnec, Luypaert, Belardinelli",
+  rep:"Bonjour,\nLes questions ne sont qu'un guide pour vous aider à démarrer : vous pouvez tout à fait en sortir et raconter librement. Si vous préférez ce mode, nous pouvons activer l'option « free talk » sur votre projet et vous envoyer un court guide de prise en main.\nDites-nous si vous souhaitez que nous l'activions.\nBien à vous, Le support Ma vie en LIVRE"},
+ {id:"SUP-06",cat:"ext",theme:"Paiement",sub:"Paiement refusé",
+  prob:"Paiement par carte refusé au checkout malgré plusieurs essais (banque / 3D Secure / plafond).",
+  kw:"paiement, refusé, carte, cb, 3d secure, banque, plafond, stripe, link",
+  crit:"Haute",cto:"Non",statut:"À jour",users:"Delaigue",
+  rep:"Bonjour,\nCe refus vient le plus souvent de votre banque (sécurité 3D Secure ou plafond de carte), et non de notre application. Nous vous conseillons de réessayer avec le paiement carte classique, puis de valider la transaction dans l'application de votre banque.\nSi le blocage persiste, nous pouvons vous envoyer un lien de paiement sécurisé de secours.\nBien à vous, Le support Ma vie en LIVRE"},
+ {id:"SUP-05",cat:"ext",theme:"Photos",sub:"Cadrage / format",
+  prob:"Photo coupée ou non affichée en entier, limite de photos par chapitre, format .heic non reconnu.",
+  kw:"photo, image, cadre, coupée, portrait, paysage, heic, format, légende",
+  crit:"Moyenne",cto:"Non",statut:"À jour",users:"Pioger, Gambier, Luypaert, Lucas",
+  rep:"Bonjour,\nPour un beau rendu à l'impression, les photos doivent respecter un format précis (portrait ou paysage). Si une photo apparaît coupée, ses proportions diffèrent du cadre : choisissez une image mieux cadrée, ou acceptez un léger recadrage.\nLa limite est de 5 à 6 photos par chapitre. Pour les images au format .heic, merci de les convertir en JPEG ou PNG.\nBelle journée, Le support Ma vie en LIVRE"},
+ {id:"SUP-16",cat:"ext",theme:"Compte",sub:"Mot de passe",
+  prob:"L'email de réinitialisation de mot de passe n'arrive pas.",
+  kw:"mot de passe, reset, réinitialisation, email non reçu, connexion, identifiants",
+  crit:"Haute",cto:"Non",statut:"À jour",users:"del Aguila",
+  rep:"Bonjour,\nMerci de refaire la procédure « mot de passe oublié » en vérifiant l'adresse e-mail saisie, puis regardez dans vos courriers indésirables.\nSi vous ne recevez toujours rien, répondez à ce message : nous vérifierons votre compte de notre côté.\nBien à vous, Le support Ma vie en LIVRE"},
+ {id:"SUP-11",cat:"ext",theme:"Mise en page",sub:"Vue client vs back-office",
+  prob:"L'affichage du livre diffère entre ce que voit le client et la version de référence (pages blanches, sommaire).",
+  kw:"vue, affichage, différence, pages blanches, sommaire, pdf, prévisualisation",
+  crit:"Basse",cto:"Non",statut:"À jour",users:"Pioger",
+  rep:"Bonjour,\nAprès vérification, la mise en page de votre livre est bien conforme de notre côté. La version imprimable applique les règles classiques d'édition (pages de transition, chapitres démarrant sur une page de droite), ce qui explique la différence avec la prévisualisation.\nJe vous joins le PDF de référence ; vous pouvez valider en toute sérénité.\nBelle journée, Le support Ma vie en LIVRE"},
+ {id:"SUP-21",cat:"ext",theme:"Structure livre",sub:"Titres / chapitres",
+  prob:"Comment changer les titres et ajouter un chapitre (au-delà de la formule).",
+  kw:"titre, chapitre, ajouter, changer, renommer, éditeur, manuscrit",
+  crit:"Moyenne",cto:"Non",statut:"À jour",users:"Bottero, Anselin",
+  rep:"Bonjour,\nPour changer le titre d'un chapitre, ouvrez le chapitre concerné puis cliquez sur l'icône crayon à côté du titre :\n[IMG1]\nSaisissez le nouveau titre, puis validez en cliquant sur « Changer le titre du chapitre » :\n[IMG2]\nPour ajouter un chapitre au-delà de votre formule, cela se fait via l'éditeur de manuscrit (option 40 €). Dites-nous si vous souhaitez le lien de règlement.\nBien à vous, Le support Ma vie en LIVRE",
+  imgs:["https://placehold.co/560x300/0D2C96/FFF4B6/png?text=Etape+1+%3A+icone+crayon","https://placehold.co/560x300/0D2C96/FFF4B6/png?text=Etape+2+%3A+changer+le+titre"]},
+ {id:"SUP-14",cat:"int",theme:"Livre collaboratif",sub:"Récit fluide sans noms",
+  prob:"Transformer les témoignages en récit fluide, sans faire apparaître les prénoms des interlocuteurs.",
+  kw:"collaboratif, récit de vie, roman, prénoms, interlocuteurs, fusion, témoignages",
+  crit:"Haute",cto:"Oui (fusion via BO)",statut:"À améliorer",users:"Karila, Chastagnier",
+  rep:"Bonjour,\nTransformer votre livre en récit fluide, sans les prénoms des interlocuteurs, correspond à une réécriture manuelle — ce n'est pas un réglage automatique.\nDeux possibilités : soit vous modifiez le texte chapitre par chapitre dans l'application, soit un biographe partenaire s'en charge (devis au préalable). Souhaitez-vous être mis en relation ?\nCordialement, Le support Ma vie en LIVRE"},
+ {id:"SUP-17",cat:"int",theme:"Bug technique",sub:"Affichage chapitre",
+  prob:"Un chapitre réécrit ne s'affiche pas côté client.",
+  kw:"bug, affichage, chapitre, non affiché, rédigé, réassignation",
+  crit:"Moyenne",cto:"Oui (réassign. BO)",statut:"À jour",users:"Baillon",
+  rep:"[Interne] Le chapitre est bien rédigé côté back-office mais ne s'affiche pas pour l'utilisateur. Solution : réassigner le chapitre à l'utilisateur depuis le back-office, puis confirmer au client que le contenu est de nouveau visible."},
+ {id:"SUP-27",cat:"int",theme:"Coffret",sub:"Accès / projet dupliqué",
+  prob:"Pas d'accès à l'application malgré un code coffret valide ; projet dupliqué / vide qui redirige vers le paiement.",
+  kw:"coffret, code, accès, projet vide, doublon, supprimer, paiement redirigé",
+  crit:"Haute",cto:"Oui (déblocage BO)",statut:"À améliorer",users:"Deverteuil, Pamartisa",
+  rep:"[Interne] Le coffret a été activé sur un second projet resté vide, ce qui redirige l'utilisateur vers la page de paiement. Solution : supprimer le projet inactif et donner l'accès sur le projet où l'utilisateur a avancé. Puis rassurer le client par mail."},
+ {id:"SUP-30",cat:"int",theme:"Blocage technique",sub:"Audio qui n'avance pas",
+  prob:"Les enregistrements audio ne progressent pas ; format audio non reconnu selon l'appareil.",
+  kw:"audio, enregistrement, n'avance pas, format non reconnu, appareil, multi-comptes",
+  crit:"Haute",cto:"Oui (invest. tech.)",statut:"À valider",users:"Buffet",
+  rep:"[Interne] Sur certains appareils/navigateurs anciens, l'audio n'est pas reconnu comme format valide. Faire un test avec l'utilisateur (parler 1 min) et vérifier côté back-office si l'audio est malgré tout sauvegardé. Si non exploitable et pas de changement de matériel : impasse à ce jour."},
+ {id:"SUP-22",cat:"int",theme:"Paiement",sub:"Suppléments (SumUp)",
+  prob:"Échec du lien de paiement d'un supplément (SumUp), reproduit sur plusieurs cartes.",
+  kw:"supplément, sumup, paiement, refusé, rib, éditeur, lien",
+  crit:"Haute",cto:"Oui (à traiter)",statut:"À améliorer",users:"Baillon, Anselin",
+  rep:"[Interne] En cas d'échec répété du lien SumUp, proposer le règlement par virement (RIB MVL). Une fois le paiement reçu, activer l'éditeur de manuscrit et envoyer le guide. Chantier ouvert : fiabiliser le moyen de paiement des suppléments."},
+ {id:"SUP-13",cat:"ext",theme:"Offre",sub:"Relecture humaine",
+  prob:"L'utilisateur demande une relecture humaine de son livre avant l'impression.",
+  kw:"relecture, humaine, correction, avant impression, option",
+  crit:"Moyenne",cto:"Non",statut:"À jour",users:"Anselin",
+  rep:"Bonjour,\nUne relecture est réalisée de notre côté au moment de l'envoi de vos chapitres. En revanche, les modifications que vous effectuez ensuite ne sont pas revues automatiquement.\nSi vous souhaitez une relecture finale complète avant impression, nous pouvons vous la proposer en option.\nBien à vous, Le support Ma vie en LIVRE"},
+];
+
+// ---- STATE ----
+let filter="all", query="", selected=null;
+const listEl=document.getElementById('list');
+const countEl=document.getElementById('count');
+const panelEl=document.getElementById('panel');
+
+function norm(s){return (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+function hl(text,q){
+  if(!q) return escapeHtml(text);
+  const nq=norm(q).split(/\s+/).filter(Boolean);
+  let out=escapeHtml(text);
+  nq.forEach(term=>{
+    if(term.length<2)return;
+    const re=new RegExp('('+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    // highlight on a normalized-insensitive basis: simple approach on raw
+    out=out.replace(new RegExp('('+escapeReg(term)+')','gi'),'<mark>$1</mark>');
+  });
+  return out;
+}
+function escapeReg(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function escapeHtml(s){return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+function match(item){
+  if(filter==="ext"&&item.cat!=="ext")return false;
+  if(filter==="int"&&item.cat!=="int")return false;
+  if(filter==="Haute"&&item.crit!=="Haute")return false;
+  if(!query)return true;
+  const hay=norm([item.id,item.theme,item.sub,item.prob,item.kw,item.users].join(" "));
+  return norm(query).split(/\s+/).filter(Boolean).every(t=>hay.includes(t));
+}
+
+function render(){
+  const res=DATA.filter(match);
+  countEl.innerHTML=`<b>${res.length}</b> fiche${res.length>1?'s':''} ${query?`pour « ${escapeHtml(query)} »`:''}`;
+  if(!res.length){
+    listEl.innerHTML=`<div class="empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <p>Aucune fiche ne correspond.<br>Essayez un autre mot-clé, ou créez une nouvelle fiche pour ce cas.</p></div>`;
+    return;
+  }
+  listEl.innerHTML=res.map(it=>`
+    <div class="card ${it.cat==='int'?'int':''} ${selected===it.id?'sel':''}" data-id="${it.id}">
+      <div class="card-top">
+        <span class="tag ${it.cat}">${it.cat==='int'?'Interne':'Support client'}</span>
+        <span class="tag theme">${escapeHtml(it.theme)}</span>
+        <span class="crit"><span class="cdot c-${it.crit}"></span>${it.crit}</span>
+      </div>
+      <h3>${hl(it.sub,query)}</h3>
+      <p>${hl(it.prob,query)}</p>
+      <div class="kw">${hl(it.kw,query)}</div>
+    </div>`).join('');
+}
+
+function showDetail(it){
+  const isInt=it.cat==='int';
+  panelEl.innerHTML=`
+    <div class="panel-head">
+      <div class="tags">
+        <span class="tag ${it.cat}">${isInt?'Interne / opérationnel':'Support client'}</span>
+        <span class="tag theme">${escapeHtml(it.theme)} · ${escapeHtml(it.sub)}</span>
+      </div>
+      <h2>${escapeHtml(it.prob)}</h2>
+      <p class="sub">${it.id}</p>
+    </div>
+    <div class="panel-body">
+      <p class="field-label">${isInt?'Marche à suivre':'Réponse type'}</p>
+      <div class="answer" id="ans">${answerPreview(it)}</div>
+      <div class="actions">
+        <button class="btn btn-primary" id="copy">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          ${it.imgs&&it.imgs.length?'Copier le texte du mail':'Copier la réponse'}
+        </button>
+      </div>
+      ${it.imgs&&it.imgs.length?imgFallback(it):''}
+      <div class="meta-grid">
+        <div class="meta"><div class="k">Criticité</div><div class="v"><span class="cdot c-${it.crit}" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px"></span>${it.crit}</div></div>
+        <div class="meta"><div class="k">Nécessite le CTO ?</div><div class="v ${it.cto==='Non'?'cto-no':'cto-yes'}">${it.cto}</div></div>
+        <div class="meta"><div class="k">Statut</div><div class="v">${it.statut}</div></div>
+        <div class="meta"><div class="k">Mots-clés</div><div class="v" style="font-weight:500;font-size:12px;color:var(--grey)">${escapeHtml(it.kw)}</div></div>
+      </div>
+      <div class="users">Cas concernés : <b>${escapeHtml(it.users)}</b></div>
+    </div>`;
+  document.getElementById('copy').addEventListener('click',e=>{
+    copyText(stripMarkers(it.rep),e.currentTarget);
+  });
+  document.querySelectorAll('[data-copyimg]').forEach(b=>b.addEventListener('click',e=>{
+    copyImageUrl(b.getAttribute('data-copyimg'),b);
+  }));
+}
+
+function escAttr(u){return (u||'').replace(/"/g,'&quot;')}
+
+// Build rich HTML (text + intercalated images) and plain-text fallback, then copy both.
+function buildRich(item){
+  const imgs = item.imgs || [];
+  // Split answer on [IMG1], [IMG2]...
+  const parts = item.rep.split(/\[IMG(\d+)\]/g); // ['textA','1','textB','2','textC']
+  let html='<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1C1C28">';
+  let plain='';
+  for(let i=0;i<parts.length;i++){
+    if(i%2===0){
+      const txt=parts[i];
+      html+=escapeHtml(txt).replace(/\n/g,'<br>');
+      plain+=txt;
+    }else{
+      const n=parseInt(parts[i],10)-1;
+      const url=imgs[n];
+      if(url){
+        html+='<div style="margin:10px 0"><img src="'+escAttr(url)+'" alt="capture '+(n+1)+'" style="max-width:100%;border:1px solid #E4E6F0;border-radius:8px"></div>';
+        plain+='\n[capture '+(n+1)+' : '+url+']\n';
+      }
+    }
+  }
+  // If answer had no markers but images exist, append them at the end
+  if(parts.length===1 && imgs.length){
+    imgs.forEach((url,i)=>{
+      html+='<div style="margin:10px 0"><img src="'+escAttr(url)+'" alt="capture '+(i+1)+'" style="max-width:100%;border:1px solid #E4E6F0;border-radius:8px"></div>';
+      plain+='\n[capture '+(i+1)+' : '+url+']\n';
+    });
+  }
+  html+='</div>';
+  return {html, plain};
+}
+
+function copyRich(item,btn){
+  const {html,plain}=buildRich(item);
+  const done=()=>{const o=btn.innerHTML;btn.classList.add('copied');btn.textContent='Copié ✓';setTimeout(()=>{btn.classList.remove('copied');btn.innerHTML=o;},1500);};
+  // Try rich copy (text/html + text/plain) — best in Gmail web
+  if(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write){
+    const blobHtml=new Blob([html],{type:'text/html'});
+    const blobText=new Blob([plain],{type:'text/plain'});
+    navigator.clipboard.write([new ClipboardItem({'text/html':blobHtml,'text/plain':blobText})])
+      .then(done)
+      .catch(()=>fallbackCopy(plain,done));
+  } else {
+    fallbackCopy(plain,done);
+  }
+}
+
+function stripMarkers(text){
+  // Replace [IMG1] markers with a clear placement note for the agent
+  return text.replace(/\[IMG(\d+)\]/g, (m,n)=>'\n→ (insérer ici l\'image '+n+')\n');
+}
+function answerPreview(item){
+  if(!item.imgs||!item.imgs.length) return escapeHtml(item.rep);
+  const parts=item.rep.split(/\[IMG(\d+)\]/g);
+  let out='';
+  for(let i=0;i<parts.length;i++){
+    if(i%2===0){ out+=escapeHtml(parts[i]).replace(/\n/g,'<br>'); }
+    else{
+      const n=parseInt(parts[i],10)-1;const url=item.imgs[n];
+      if(url) out+='<div style="margin:8px 0"><img src="'+escAttr(url)+'" alt="capture '+(n+1)+'" style="max-width:100%;border:1px solid var(--line);border-radius:8px"></div>';
+    }
+  }
+  return out;
+}
+function imgFallback(item){
+  let h='<div style="margin-top:16px"><p class="field-label">Images à insérer dans le mail</p>';
+  h+='<p style="font-size:12px;color:var(--grey);margin:0 0 10px">Copiez le texte, puis pour chaque image : « Copier » ci-dessous et collez-la (Ctrl+V) à l\'endroit indiqué dans Gmail. Vous pouvez aussi la glisser directement.</p>';
+  h+='<div style="display:flex;gap:14px;flex-wrap:wrap">';
+  item.imgs.forEach((url,i)=>{
+    h+='<div style="text-align:center;width:150px"><div style="font-size:11px;font-weight:600;color:var(--navy);margin-bottom:4px">Image '+(i+1)+'</div><img src="'+escAttr(url)+'" alt="capture '+(i+1)+'" style="width:150px;height:auto;border:1px solid var(--line);border-radius:8px;display:block;margin-bottom:6px"><button class="btn btn-primary" style="padding:7px 12px;font-size:12px;width:100%" data-copyimg="'+escAttr(url)+'">Copier l\'image '+(i+1)+'</button></div>';
+  });
+  h+='</div></div>';
+  return h;
+}
+function copyImageUrl(url,btn){
+  // Copy the actual image to clipboard as PNG so it can be pasted directly
+  const done=()=>{const o=btn.textContent;btn.classList.add('copied');btn.textContent='Copié ✓';setTimeout(()=>{btn.classList.remove('copied');btn.textContent=o;},1400);};
+  if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+    fetch(url).then(r=>r.blob()).then(blob=>{
+      // convert to png if needed via canvas
+      return navigator.clipboard.write([new ClipboardItem({[blob.type||'image/png']:blob})]);
+    }).then(done).catch(()=>{ // fallback: copy URL as text
+      navigator.clipboard.writeText(url).then(done).catch(()=>{});
+    });
+  } else { navigator.clipboard&&navigator.clipboard.writeText(url).then(done); }
+}
+function copyText(text,btn){
+  const done=()=>{const o=btn.innerHTML;btn.classList.add('copied');btn.textContent='Copié ✓';setTimeout(()=>{btn.classList.remove('copied');btn.innerHTML=o;},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));}
+  else fallbackCopy(text,done);
+}
+function fallbackCopy(text,cb){const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(t);cb&&cb();}
+
+
+// events
+listEl.addEventListener('click',e=>{
+  const card=e.target.closest('.card[data-id]');if(!card)return;
+  selected=card.dataset.id;render();
+  showDetail(DATA.find(d=>d.id===selected));
+});
+document.getElementById('filters').addEventListener('click',e=>{
+  const c=e.target.closest('.chip');if(!c)return;
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on');filter=c.dataset.f;render();
+});
+const qEl=document.getElementById('q'),clearEl=document.getElementById('clear');
+qEl.addEventListener('input',()=>{query=qEl.value.trim();clearEl.classList.toggle('show',!!query);render();});
+clearEl.addEventListener('click',()=>{qEl.value='';query='';clearEl.classList.remove('show');render();qEl.focus();});
+
+
+render();
+</script>
+</body>
+</html>
